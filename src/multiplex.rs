@@ -1,4 +1,4 @@
-use axum::{body::BoxBody, http::header::CONTENT_TYPE, response::IntoResponse};
+use axum::{body::BoxBody, http::header::CONTENT_TYPE, response::IntoResponse, Router};
 use futures::{future::BoxFuture, ready};
 use hyper::{Body, Request, Response};
 use std::{
@@ -7,15 +7,21 @@ use std::{
 };
 use tower::Service;
 
-pub struct MultiplexService<A, B> {
-    rest: A,
+/// This service splits all incoming requests either to the rest-service, or to
+/// the grpc-service based on the `content-type` header.
+///
+/// Only if the header `content-type = application/grpc` exists, will the requests be handled
+/// by the grpc-service. All other requests go to the rest-service.
+#[derive(Debug, Clone)]
+pub struct RestGrpcRouter {
+    rest: Router,
     rest_ready: bool,
-    grpc: B,
+    grpc: Router,
     grpc_ready: bool,
 }
 
-impl<A, B> MultiplexService<A, B> {
-    pub fn new(rest: A, grpc: B) -> Self {
+impl RestGrpcRouter {
+    pub fn new(rest: Router, grpc: Router) -> Self {
         Self {
             rest,
             rest_ready: false,
@@ -23,32 +29,13 @@ impl<A, B> MultiplexService<A, B> {
             grpc_ready: false,
         }
     }
-}
 
-impl<A, B> Clone for MultiplexService<A, B>
-where
-    A: Clone,
-    B: Clone,
-{
-    fn clone(&self) -> Self {
-        Self {
-            rest: self.rest.clone(),
-            grpc: self.grpc.clone(),
-            rest_ready: false,
-            grpc_ready: false,
-        }
+    pub fn into_make_service(self) -> tower::make::Shared<Self> {
+        tower::make::Shared::new(self)
     }
 }
 
-impl<A, B> Service<Request<Body>> for MultiplexService<A, B>
-where
-    A: Service<Request<Body>, Error = Infallible>,
-    A::Response: IntoResponse,
-    A::Future: Send + 'static,
-    B: Service<Request<Body>, Error = Infallible>,
-    B::Response: IntoResponse,
-    B::Future: Send + 'static,
-{
+impl Service<Request<Body>> for RestGrpcRouter {
     type Response = Response<BoxBody>;
     type Error = Infallible;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;

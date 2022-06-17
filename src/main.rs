@@ -13,14 +13,13 @@ use axum::{
 use company_info::GetAboutInfoRequest;
 use futures::{Future, FutureExt};
 use hyper::{service::Service, Request, StatusCode, Uri};
+use multiplex::RestGrpcRouter;
 use tonic::{
     client::Grpc,
     transport::{Channel, NamedService},
 };
 use tower::layer::layer_fn;
 use tower_http::trace::TraceLayer;
-
-use crate::multiplex::MultiplexService;
 
 pub mod server;
 // mod proto;
@@ -32,7 +31,7 @@ async fn auth<B>(req: Request<B>, next: Next<B>, print: &str) -> Result<Response
     fn token_is_valid(token: &str) -> bool {
         true
     }
-    
+
     println!("{}", print);
 
     let auth_header = req
@@ -48,16 +47,14 @@ async fn auth<B>(req: Request<B>, next: Next<B>, print: &str) -> Result<Response
     Ok(next.run(req).await)
 }
 
-
-
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
 
     let handle = tokio::task::spawn(async move {
-        let grpc_router1 = router_from_tonic(server::service1()).layer(from_fn(|a, b| auth(a, b, "router1")));
+        let grpc_router1 = router(server::service1()).layer(from_fn(|a, b| auth(a, b, "router1")));
 
-        let grpc_router2 = router_from_tonic(server::service2()).layer(from_fn(|a, b| auth(a, b, "router2")));
+        let grpc_router2 = router(server::service2()).layer(from_fn(|a, b| auth(a, b, "router2")));
 
         let grpc_router = grpc_router1.merge(grpc_router2);
 
@@ -65,7 +62,7 @@ async fn main() {
             .nest("/", Router::new().route("/123", get(|| async move {})))
             .route("/", get(|| async move {}));
 
-        let server = tower::make::Shared::new(MultiplexService::new(rest_router, grpc_router));
+        let server = RestGrpcRouter::new(rest_router, grpc_router).into_make_service();
 
         axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
             .serve(server)
@@ -73,7 +70,6 @@ async fn main() {
             .unwrap();
     });
 
-    tokio::time::sleep(Duration::from_millis(100)).await;
 
     let channel = Channel::from_static("http://127.0.0.1:3000")
         .connect()
@@ -85,18 +81,9 @@ async fn main() {
     let response = client.get_about_info(GetAboutInfoRequest {}).await.unwrap();
     let response = client.get_about_info(GetAboutInfoRequest {}).await.unwrap();
     let response = client.get_about_info(GetAboutInfoRequest {}).await.unwrap();
-
-    // println!("response: {:?}", response);
-    // com
-
-    // handle.await.unwrap();
 }
 
-//------------------------------------------------------------------------------------------------
-//  Nest
-//------------------------------------------------------------------------------------------------
-
-pub fn router_from_tonic<S>(svc: S) -> Router
+pub fn router<S>(svc: S) -> Router
 where
     S: Service<
             hyper::Request<hyper::Body>,
