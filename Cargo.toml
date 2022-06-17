@@ -13,3 +13,9 @@ futures = "0.3.21"
 prost = "0.10.4"
 http-body = "0.4.4"
 hyper = "0.14.19"
+tower = { version = "0.4", features = ["timeout"] }
+tower-http = { version = "0.3", features = ["compression-gzip", "cors", "compression-br", "compression-deflate", "trace"] }
+tracing-subscriber = "0.3.11"
+
+[build-dependencies]
+tonic-build = "0.7.2"

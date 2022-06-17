@@ -1,0 +1,36 @@
+syntax = "proto3";
+package company_info;
+
+message GetContactInfoRequest { }
+message GetContactInfoReply {
+    optional string email = 1;
+}
+
+message GetToSRequest { }
+message GetTosReply {
+    optional string terms_of_service = 1;
+}
+
+message GetAboutInfoRequest { }
+message GetAboutInfoReply {
+    optional string about_info = 1;
+}
+
+service CompanyInfo {
+    // Get the contact info
+    rpc GetContactInfo(GetContactInfoRequest) returns (GetContactInfoReply);
+
+    // Get the terms of service
+    rpc GetToS(GetToSRequest) returns (GetTosReply);
+
+    // Get the about information
+    rpc GetAboutInfo(GetAboutInfoRequest) returns (GetAboutInfoReply);
+}
+
+message HiRequest { }
+message HiReply { }
+
+service Test {
+    // Get the contact info
+    rpc Hi(HiRequest) returns (HiReply);
+}
