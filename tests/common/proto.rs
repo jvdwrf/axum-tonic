@@ -32,18 +32,18 @@ pub mod company_info_server {
         /// Get the contact info
         async fn get_contact_info(
             &self,
-            request: tonic::Request<crate::proto::GetContactInfoRequest>,
-        ) -> Result<tonic::Response<crate::proto::GetContactInfoReply>, tonic::Status>;
+            request: tonic::Request<crate::common::proto::GetContactInfoRequest>,
+        ) -> Result<tonic::Response<crate::common::proto::GetContactInfoReply>, tonic::Status>;
         /// Get the terms of service
         async fn get_to_s(
             &self,
-            request: tonic::Request<crate::proto::GetToSRequest>,
-        ) -> Result<tonic::Response<crate::proto::GetTosReply>, tonic::Status>;
+            request: tonic::Request<crate::common::proto::GetToSRequest>,
+        ) -> Result<tonic::Response<crate::common::proto::GetTosReply>, tonic::Status>;
         /// Get the about information
         async fn get_about_info(
             &self,
-            request: tonic::Request<crate::proto::GetAboutInfoRequest>,
-        ) -> Result<tonic::Response<crate::proto::GetAboutInfoReply>, tonic::Status>;
+            request: tonic::Request<crate::common::proto::GetAboutInfoRequest>,
+        ) -> Result<tonic::Response<crate::common::proto::GetAboutInfoReply>, tonic::Status>;
     }
     #[derive(Debug)]
     pub struct CompanyInfoServer<T: CompanyInfo> {

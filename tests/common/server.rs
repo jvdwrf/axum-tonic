@@ -1,8 +1,8 @@
 use axum::{async_trait, Server};
 
-use crate::company_info::*;
-use crate::company_info::test_server::TestServer;
-use crate::company_info::{company_info_server::*, test_server::Test};
+use crate::common::company_info::test_server::TestServer;
+use crate::common::company_info::*;
+use crate::common::company_info::{company_info_server::*, test_server::Test};
 use tonic::{Request, Response, Status};
 
 pub fn service1() -> CompanyInfoServer<MyCompanyInfoService> {
@@ -22,11 +22,14 @@ pub struct MyHiService {}
 impl Test for MyHiService {
     fn hi<'life0, 'async_trait>(
         &'life0 self,
-        request: tonic::Request<crate::company_info::HiRequest>,
+        request: tonic::Request<crate::common::company_info::HiRequest>,
     ) -> core::pin::Pin<
         Box<
             dyn core::future::Future<
-                    Output = Result<tonic::Response<crate::company_info::HiReply>, tonic::Status>,
+                    Output = Result<
+                        tonic::Response<crate::common::company_info::HiReply>,
+                        tonic::Status,
+                    >,
                 > + core::marker::Send
                 + 'async_trait,
         >,

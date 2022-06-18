@@ -5,7 +5,7 @@ use std::{
     convert::Infallible,
     task::{Context, Poll},
 };
-use tower::Service;
+use tower::{make::Shared, Service};
 
 /// This service splits all incoming requests either to the rest-service, or to
 /// the grpc-service based on the `content-type` header.
@@ -13,29 +13,29 @@ use tower::Service;
 /// Only if the header `content-type = application/grpc` exists, will the requests be handled
 /// by the grpc-service. All other requests go to the rest-service.
 #[derive(Debug, Clone)]
-pub struct RestGrpcRouter {
-    rest: Router,
+pub struct RestGrpcService {
+    rest_router: Router,
     rest_ready: bool,
-    grpc: Router,
+    grpc_router: Router,
     grpc_ready: bool,
 }
 
-impl RestGrpcRouter {
-    pub fn new(rest: Router, grpc: Router) -> Self {
+impl RestGrpcService {
+    pub fn new(rest_router: Router, grpc_router: Router) -> Self {
         Self {
-            rest,
+            rest_router,
             rest_ready: false,
-            grpc,
+            grpc_router,
             grpc_ready: false,
         }
     }
 
-    pub fn into_make_service(self) -> tower::make::Shared<Self> {
-        tower::make::Shared::new(self)
+    pub fn into_make_service(self) -> Shared<Self> {
+        Shared::new(self)
     }
 }
 
-impl Service<Request<Body>> for RestGrpcRouter {
+impl Service<Request<Body>> for RestGrpcService {
     type Response = Response<BoxBody>;
     type Error = Infallible;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
@@ -48,11 +48,11 @@ impl Service<Request<Body>> for RestGrpcRouter {
                     return Ok(()).into();
                 }
                 (false, _) => {
-                    ready!(self.rest.poll_ready(cx))?;
+                    ready!(self.rest_router.poll_ready(cx))?;
                     self.rest_ready = true;
                 }
                 (_, false) => {
-                    ready!(self.grpc.poll_ready(cx))?;
+                    ready!(self.grpc_router.poll_ready(cx))?;
                     self.grpc_ready = true;
                 }
             }
@@ -75,14 +75,14 @@ impl Service<Request<Body>> for RestGrpcRouter {
         // when calling a service it becomes not-ready so we have drive readiness again
         if is_grpc_request(&req) {
             self.grpc_ready = false;
-            let future = self.grpc.call(req);
+            let future = self.grpc_router.call(req);
             Box::pin(async move {
                 let res = future.await?;
                 Ok(res.into_response())
             })
         } else {
             self.rest_ready = false;
-            let future = self.rest.call(req);
+            let future = self.rest_router.call(req);
             Box::pin(async move {
                 let res = future.await?;
                 Ok(res.into_response())
