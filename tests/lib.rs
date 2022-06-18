@@ -6,13 +6,13 @@ use axum::{
     middleware::{from_fn, Next},
     response::Response,
     routing::get,
-    Router, Server,
+    Router,
 };
-use axum_tonic::{NestTonic, RestGrpcService, TonicStatusWrapper};
+use axum_tonic::{merge_rest_with_grpc, NestTonic, TonicStatusWrapper};
 use common::{
     company_info,
     company_info::{GetAboutInfoRequest, HiRequest},
-    server::{self, *},
+    server,
 };
 use hyper::Request;
 use tonic::transport::Channel;
@@ -62,10 +62,14 @@ async fn main() {
             .nest("/", Router::new().route("/123", get(|| async move {})))
             .route("/", get(|| async move {}));
 
-        let server = RestGrpcService::new(rest_router, grpc_router).into_make_service();
+        let router = merge_rest_with_grpc(rest_router, grpc_router);
+
+        // Router::new().nest("/", RestGrpcService::new(rest_router, grpc_router));
+
+        // let server = RestGrpcService::new(rest_router, grpc_router).into_make_service();
 
         axum::Server::bind(&"127.0.0.1:3000".parse().unwrap())
-            .serve(server)
+            .serve(router.into_make_service())
             .await
             .unwrap();
     });

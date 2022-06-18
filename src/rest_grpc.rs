@@ -13,11 +13,20 @@ use tower::{make::Shared, Service};
 /// Only if the header `content-type = application/grpc` exists, will the requests be handled
 /// by the grpc-service. All other requests go to the rest-service.
 #[derive(Debug, Clone)]
-pub struct RestGrpcService {
+struct RestGrpcService {
     rest_router: Router,
     rest_ready: bool,
     grpc_router: Router,
     grpc_ready: bool,
+}
+
+/// Merge a rest-router with a grpc-router.
+/// 
+/// Requests containing the header `content-type = application/grpc` will be routed to
+/// the grpc_router, while all other requests will be routed to the rest-router.
+pub fn merge_rest_with_grpc(rest_router: Router, grpc_router: Router) -> Router {
+    let svc = RestGrpcService::new(rest_router, grpc_router);
+    Router::new().nest("/", svc)
 }
 
 impl RestGrpcService {
