@@ -5,8 +5,9 @@ use futures::{Future, FutureExt};
 use hyper::{service::Service, Request};
 use tonic::transport::NamedService;
 
-/// This trait automatically nests the router at the correct path, taken from NamedService
+/// This trait automatically nests the NamedService at the correct path.
 pub trait NestTonic: Sized {
+    /// Nest a tonic-service at the root path of this router.
     fn nest_tonic<S>(self, svc: S) -> Self
     where
         S: Service<
@@ -19,27 +20,6 @@ pub trait NestTonic: Sized {
             + 'static
             + NamedService,
         S::Future: Send + 'static + Unpin;
-
-    // fn nest_tonic_with_interceptor<S1, S2>(self, svc: S1, map_fn: fn(S1) -> S2) -> Self
-    // where
-    //     S1: Service<
-    //             hyper::Request<hyper::Body>,
-    //             Error = Infallible,
-    //             Response = hyper::Response<tonic::body::BoxBody>,
-    //         >
-    //         + Clone
-    //         + Send
-    //         + 'static
-    //         + NamedService,
-    //     S1::Future: Send + 'static,
-    //     S2: Service<
-    //             hyper::Request<hyper::Body>,
-    //             Error = Infallible,
-    //             Response = hyper::Response<tonic::body::BoxBody>,
-    //         > + Clone
-    //         + Send
-    //         + 'static,
-    //     S2::Future: Send + 'static + Unpin;
 }
 
 impl NestTonic for Router {
@@ -62,33 +42,6 @@ impl NestTonic for Router {
             AxumTonicService { svc },
         )
     }
-
-    // fn nest_tonic_with_interceptor<S1, S2>(self, svc: S1, map_fn: fn(S1) -> S2) -> Self
-    // where
-    //     S1: Service<
-    //             hyper::Request<hyper::Body>,
-    //             Error = Infallible,
-    //             Response = hyper::Response<tonic::body::BoxBody>,
-    //         >
-    //         + Clone
-    //         + Send
-    //         + 'static
-    //         + NamedService,
-    //     S1::Future: Send + 'static,
-    //     S2: Service<
-    //             hyper::Request<hyper::Body>,
-    //             Error = Infallible,
-    //             Response = hyper::Response<tonic::body::BoxBody>,
-    //         > + Clone
-    //         + Send
-    //         + 'static,
-    //     S2::Future: Send + 'static + Unpin,
-    // {
-    //     self.route(
-    //         &format!("/{}/*grpc_service", S1::NAME),
-    //         AxumTonicService { svc: map_fn(svc) },
-    //     )
-    // }
 }
 
 //------------------------------------------------------------------------------------------------
@@ -104,7 +57,6 @@ struct AxumTonicService<S> {
 impl<B, S> Service<Request<B>> for AxumTonicService<S>
 where
     S: Service<Request<B>, Error = Infallible, Response = hyper::Response<tonic::body::BoxBody>>,
-    // + NamedService,
     S::Future: Unpin,
 {
     type Response = axum::response::Response;

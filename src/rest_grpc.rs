@@ -13,23 +13,15 @@ use tower::{make::Shared, Service};
 /// Only if the header `content-type = application/grpc` exists, will the requests be handled
 /// by the grpc-service. All other requests go to the rest-service.
 #[derive(Debug, Clone)]
-struct RestGrpcService {
+pub struct RestGrpcService {
     rest_router: Router,
     rest_ready: bool,
     grpc_router: Router,
     grpc_ready: bool,
 }
 
-/// Merge a rest-router with a grpc-router.
-/// 
-/// Requests containing the header `content-type = application/grpc` will be routed to
-/// the grpc_router, while all other requests will be routed to the rest-router.
-pub fn merge_rest_with_grpc(rest_router: Router, grpc_router: Router) -> Router {
-    let svc = RestGrpcService::new(rest_router, grpc_router);
-    Router::new().nest("/", svc)
-}
-
 impl RestGrpcService {
+    /// Create a new service, which splits requests between the rest- and grpc-router.
     pub fn new(rest_router: Router, grpc_router: Router) -> Self {
         Self {
             rest_router,
@@ -39,6 +31,29 @@ impl RestGrpcService {
         }
     }
 
+    /// Create a make-service from this service. This make-service can be directly used
+    /// in the `serve` method of an axum/hyper Server.
+    /// 
+    /// If you would like to add shared middleware for both the rest-service and the grpc-service,
+    /// the following approach is recommended:
+    /// 
+    /// ```ignore
+    /// use tower::{builder::ServiceBuilder, make::make_service::shared::Shared};
+    /// use axum::Server;
+    /// 
+    /// let svc: RestGrpcService = my_service();
+    /// 
+    /// let svc_with_layers = ServiceBuilder::new()
+    ///     .buffer(5)
+    ///     .layer(my_layer1())
+    ///     .layer(my_layer2())
+    ///     .service(svc);
+    /// 
+    /// Server::bind(&"127.0.0.1:3000".parse().unwrap())
+    ///     .serve(Shared::new(svc_with_layers))
+    ///     .await
+    ///     .unwrap();
+    /// ```
     pub fn into_make_service(self) -> Shared<Self> {
         Shared::new(self)
     }
