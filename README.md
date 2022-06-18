@@ -1,5 +1,8 @@
 # axum_tonic
 
+[![Crates.io](https://img.shields.io/crates/v/axum_tonic)](https://crates.io/crates/axum)
+[![Documentation](https://docs.rs/axum_tonic/badge.svg)](https://docs.rs/axum)
+
 A tiny crate to use Tonic with Axum.
 
 This crate makes it simple to use different kinds of middleware with different tonic-services.
