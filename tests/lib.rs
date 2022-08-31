@@ -1,6 +1,6 @@
 pub mod common;
 
-use std::{fmt::Debug, time::Duration};
+use std::{sync::Mutex, time::Duration};
 
 use axum::{
     middleware::{from_fn, Next},
@@ -31,7 +31,10 @@ async fn cancel_request<B>(_req: Request<B>, _next: Next<B>) -> Result<Response,
 async fn main() {
     tokio::task::spawn(async move {
         let grpc_router1 = Router::new()
-            .nest_tonic(Test1Server::new(Test1Service))
+            .nest_tonic(Test1Server::new(Test1Service {
+                state: Mutex::new(10),
+                str: String::new(),
+            }))
             .layer(from_fn(do_nothing));
 
         let grpc_router2 = Router::new()
@@ -60,6 +63,21 @@ async fn main() {
         .unwrap();
 
     let mut client1 = Test1Client::new(channel.clone());
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+
+    let channel = Channel::from_static("http://127.0.0.1:8080")
+        .connect()
+        .await
+        .unwrap();
+
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
+    client1.test1(Test1Request {}).await.unwrap();
     client1.test1(Test1Request {}).await.unwrap();
 
     let mut client2 = Test2Client::new(channel);
