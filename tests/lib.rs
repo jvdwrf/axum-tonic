@@ -43,9 +43,8 @@ async fn main() {
 
         let grpc_router = grpc_router1.merge(grpc_router2);
 
-        let rest_router = Router::new()
-            .nest("/", Router::new().route("/123", get(|| async move {})))
-            .route("/", get(|| async move {}));
+        let rest_router =
+            Router::new().nest("/", Router::new().route("/123", get(|| async move {})));
 
         let service = RestGrpcService::new(rest_router, grpc_router);
 

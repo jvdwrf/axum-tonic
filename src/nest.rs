@@ -1,6 +1,6 @@
 use std::convert::Infallible;
 
-use axum::{response::IntoResponse, Router};
+use axum::{response::IntoResponse, routing::any_service, Router};
 use futures::{Future, FutureExt};
 use hyper::{service::Service, Request};
 use tonic::transport::NamedService;
@@ -39,7 +39,7 @@ impl NestTonic for Router {
         // Nest it at /S::NAME, and wrap the service in an AxumTonicService
         self.route(
             &format!("/{}/*grpc_service", S::NAME),
-            AxumTonicService { svc },
+            any_service(AxumTonicService { svc }),
         )
     }
 }
