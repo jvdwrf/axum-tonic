@@ -7,7 +7,7 @@ use std::ops::{Deref, DerefMut};
 /// ```
 /// use axum::{middleware::{Next, from_fn}, response::Response, Router};
 /// use axum_tonic::GrpcStatus;
-/// use hyper::{Request, Body};
+/// use hyper::Request;
 ///
 /// async fn tonic_middleware<B>(
 ///     req: Request<B>,
@@ -26,7 +26,7 @@ use std::ops::{Deref, DerefMut};
 ///     true // or other logic
 /// }
 ///
-/// let router: Router<Body> = Router::new()
+/// let router: Router<()> = Router::new()
 ///     .layer(from_fn(tonic_middleware));
 /// ```
 #[derive(Debug)]
