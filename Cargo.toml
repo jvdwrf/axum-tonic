@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
 description = "Use Tonic with Axum"
-home-page = "https://github.com/jvdwrf/axum-tonic"
 homepage = "https://github.com/jvdwrf/axum-tonic"
 keywords = ["axum", "tonic", "interop", "grpc", "web"]
 categories = ["web-programming"]
@@ -12,19 +11,19 @@ categories = ["web-programming"]
 
 [dependencies]
 axum = "0.6.1"
-tonic = "0.8.0"
+tonic = "0.10.2"
 hyper = "0.14.19"
 futures = "0.3.21"
 tower = "0.4"
 
 [build-dependencies]
-tonic-build = "0.8.0"
+tonic-build = "0.10.2"
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["full"] }
-prost = "0.11.0"
+prost = "0.12.3"
 http-body = "0.4.4"
-tower-http = { version = "0.3", features = [
+tower-http = { version = "0.4.4", features = [
     "compression-gzip",
     "cors",
     "compression-br",
