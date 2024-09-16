@@ -5,13 +5,12 @@ use std::ops::{Deref, DerefMut};
 ///
 /// ## Example
 /// ```
-/// use axum::{middleware::{Next, from_fn}, response::Response, Router};
+/// use axum::{middleware::{Next, from_fn}, response::Response, Router, extract::Request};
 /// use axum_tonic::GrpcStatus;
-/// use hyper::Request;
 ///
-/// async fn tonic_middleware<B>(
-///     req: Request<B>,
-///     next: Next<B>
+/// async fn tonic_middleware(
+///     req: Request,
+///     next: Next
 /// ) -> Result<Response, GrpcStatus> {
 ///     if is_auth(&req) {
 ///         Ok(next.run(req).await)

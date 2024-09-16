@@ -3,6 +3,7 @@ pub mod common;
 use std::{sync::Mutex, time::Duration};
 
 use axum::{
+    extract::Request,
     middleware::{from_fn, Next},
     response::Response,
     routing::get,
@@ -16,14 +17,14 @@ use common::{
     },
     server::{Test1Service, Test2Service},
 };
-use hyper::Request;
+use tokio::net::TcpListener;
 use tonic::transport::Channel;
 
-async fn do_nothing<B>(req: Request<B>, next: Next<B>) -> Result<Response, GrpcStatus> {
+async fn do_nothing(req: Request, next: Next) -> Result<Response, GrpcStatus> {
     Ok(next.run(req).await)
 }
 
-async fn cancel_request<B>(_req: Request<B>, _next: Next<B>) -> Result<Response, GrpcStatus> {
+async fn cancel_request(_req: Request, _next: Next) -> Result<Response, GrpcStatus> {
     Err(tonic::Status::cancelled("Canceled").into())
 }
 
@@ -46,12 +47,10 @@ async fn main() {
         let rest_router =
             Router::new().nest("/", Router::new().route("/123", get(|| async move {})));
 
-        let service = RestGrpcService::new(rest_router, grpc_router);
+        let service = RestGrpcService::new(rest_router, grpc_router).into_make_service();
 
-        axum::Server::bind(&"127.0.0.1:8080".parse().unwrap())
-            .serve(service.into_make_service())
-            .await
-            .unwrap();
+        let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+        axum::serve(listener, service).await.unwrap();
     });
 
     tokio::time::sleep(Duration::from_millis(100)).await;
