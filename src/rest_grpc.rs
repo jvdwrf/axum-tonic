@@ -38,8 +38,9 @@ impl RestGrpcService {
     /// the following approach is recommended:
     ///
     /// ```ignore
-    /// use tower::{builder::ServiceBuilder, make::make_service::shared::Shared};
-    /// use axum::Server;
+    /// use axum_tonic::RestGrpcService;
+    /// use tokio::net::TcpListener;
+    /// use tower::ServiceBuilder;
     ///
     /// let svc: RestGrpcService = my_service();
     ///
@@ -49,8 +50,7 @@ impl RestGrpcService {
     ///     .layer(my_layer2())
     ///     .service(svc);
     ///
-    /// Server::bind(&"127.0.0.1:3000".parse().unwrap())
-    ///     .serve(Shared::new(svc_with_layers))
+    /// axum::serve(TcpListener::bind(&"127.0.0.1:3000"), svc_with_layers)
     ///     .await
     ///     .unwrap();
     /// ```
