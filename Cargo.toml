@@ -10,24 +10,24 @@ categories = ["web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-axum = "0.7.5"
-tonic = "0.12.2"
-hyper = "1.4.1"
-futures = "0.3.30"
-tower = { version = "0.5.1" , features = ["make"] }
+axum = "0.8.1"
+tonic = "0.12.3"
+hyper = "1.6.0"
+futures = "0.3.31"
+tower = { version = "0.5.2" , features = ["make"] }
 
 [build-dependencies]
-tonic-build = "0.12.2"
+tonic-build = "0.12.3"
 
 [dev-dependencies]
-tokio = { version = "1.40.0", features = ["full"] }
-prost = "0.13.2"
+tokio = { version = "1.43.0", features = ["full"] }
+prost = "0.13.5"
 http-body = "1.0.1"
-tower-http = { version = "0.5.2", features = [
+tower-http = { version = "0.6.2", features = [
     "compression-gzip",
     "cors",
     "compression-br",
     "compression-deflate",
     "trace",
 ] }
-tracing-subscriber = "0.3.18"
+tracing-subscriber = "0.3.19"

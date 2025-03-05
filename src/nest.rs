@@ -18,6 +18,7 @@ pub trait NestTonic: Sized {
             >
             + Clone
             + Send
+            + Sync
             + 'static
             + NamedService,
         S::Future: Send + 'static + Unpin;
@@ -33,6 +34,7 @@ impl NestTonic for Router {
             >
             + Clone
             + Send
+            + Sync
             + 'static
             + NamedService,
 
@@ -40,7 +42,7 @@ impl NestTonic for Router {
     {
         // Nest it at /S::NAME, and wrap the service in an AxumTonicService
         self.route(
-            &format!("/{}/*grpc_service", S::NAME),
+            &format!("/{}/{{*grpc_service}}", S::NAME),
             any_service(AxumTonicService { svc }),
         )
     }
