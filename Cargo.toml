@@ -1,7 +1,6 @@
 [package]
 name = "axum_tonic"
-version = "0.2.0"
-edition = "2021"
+version = "0.3.0"
 license = "MIT OR Apache-2.0"
 description = "Use Tonic with Axum"
 homepage = "https://github.com/jvdwrf/axum-tonic"
@@ -14,13 +13,13 @@ axum = "0.8.1"
 tonic = "0.12.3"
 hyper = "1.6.0"
 futures = "0.3.31"
-tower = { version = "0.5.2" , features = ["make"] }
+tower = { version = "0.5.2", features = ["make"] }
 
 [build-dependencies]
 tonic-build = "0.12.3"
 
 [dev-dependencies]
-tokio = { version = "1.43.0", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
 prost = "0.13.5"
 http-body = "1.0.1"
 tower-http = { version = "0.6.2", features = [
