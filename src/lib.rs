@@ -33,11 +33,11 @@
 //!             .route("/", get(|| async move {}));
 //!
 //!         // Combine both services into one
-//!         let service = RestGrpcService::new(rest_router, grpc_router);
+//!         let service = RestGrpcService::new(rest_router, grpc_router).into_make_service();
 //!
 //!         // And serve at 127.0.0.1:8080
-//!         axum::Server::bind(&"127.0.0.1:8080".parse().unwrap())
-//!             .serve(service.into_make_service())
+//!         let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
+//!         axum::serve(listener, service)
 //!             .await
 //!             .unwrap();
 //!     });
