@@ -3,17 +3,17 @@ pub mod common;
 use std::{sync::Mutex, time::Duration};
 
 use axum::{
+    Router,
     extract::Request,
-    middleware::{from_fn, Next},
+    middleware::{Next, from_fn},
     response::Response,
     routing::get,
-    Router,
 };
 use axum_tonic::{GrpcStatus, NestTonic, RestGrpcService};
 use common::{
     proto::{
-        test1_client::Test1Client, test1_server::Test1Server, test2_client::Test2Client,
-        test2_server::Test2Server, Test1Request, Test2Request,
+        Test1Request, Test2Request, test1_client::Test1Client, test1_server::Test1Server,
+        test2_client::Test2Client, test2_server::Test2Server,
     },
     server::{Test1Service, Test2Service},
 };

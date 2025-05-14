@@ -3,8 +3,8 @@ use std::sync::Mutex;
 use crate::common::proto::test1_server::*;
 use crate::common::proto::test2_server::*;
 use crate::common::proto::*;
-use tonic::async_trait;
 use tonic::Response;
+use tonic::async_trait;
 
 pub struct Test1Service {
     pub state: Mutex<u32>,
