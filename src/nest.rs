@@ -1,44 +1,47 @@
 use std::convert::Infallible;
 
-use axum::{response::IntoResponse, routing::any_service, Router};
+use axum::{Router, response::IntoResponse, routing::any_service};
 use futures::{Future, FutureExt};
 use hyper::Request;
 use tonic::server::NamedService;
 use tower::Service;
 
 /// This trait automatically nests the NamedService at the correct path.
-pub trait NestTonic: Sized {
+pub trait NestTonic<B>: Sized {
     /// Nest a tonic-service at the root path of this router.
     fn nest_tonic<S>(self, svc: S) -> Self
     where
         S: Service<
                 hyper::Request<axum::body::Body>,
                 Error = Infallible,
-                Response = hyper::Response<tonic::body::BoxBody>,
+                Response = hyper::Response<B>,
             >
             + Clone
             + Send
             + Sync
             + 'static
             + NamedService,
-        S::Future: Send + 'static + Unpin;
+        S::Future: Send + 'static + Unpin,
+        B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
+        B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>;
 }
 
-impl NestTonic for Router {
+impl<B> NestTonic<B> for Router {
     fn nest_tonic<S>(self, svc: S) -> Self
     where
         S: Service<
                 hyper::Request<axum::body::Body>,
                 Error = Infallible,
-                Response = hyper::Response<tonic::body::BoxBody>,
+                Response = hyper::Response<B>,
             >
             + Clone
             + Send
             + Sync
             + 'static
             + NamedService,
-
         S::Future: Send + 'static + Unpin,
+        B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
+        B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
     {
         // Nest it at /S::NAME, and wrap the service in an AxumTonicService
         self.route(
@@ -58,10 +61,12 @@ struct AxumTonicService<S> {
     svc: S,
 }
 
-impl<B, S> Service<Request<B>> for AxumTonicService<S>
+impl<B, TBody, S> Service<Request<B>> for AxumTonicService<S>
 where
-    S: Service<Request<B>, Error = Infallible, Response = hyper::Response<tonic::body::BoxBody>>,
+    S: Service<Request<B>, Error = Infallible, Response = hyper::Response<TBody>>,
     S::Future: Unpin,
+    TBody: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
+    TBody::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
 {
     type Response = axum::response::Response;
     type Error = Infallible;
@@ -90,9 +95,11 @@ struct AxumTonicServiceFut<F> {
     fut: F,
 }
 
-impl<F> Future for AxumTonicServiceFut<F>
+impl<F, B> Future for AxumTonicServiceFut<F>
 where
-    F: Future<Output = Result<hyper::Response<tonic::body::BoxBody>, Infallible>> + Unpin,
+    F: Future<Output = Result<hyper::Response<B>, Infallible>> + Unpin,
+    B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
+    B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
 {
     type Output = Result<axum::response::Response, Infallible>;
 

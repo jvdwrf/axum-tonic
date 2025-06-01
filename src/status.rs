@@ -53,6 +53,6 @@ impl DerefMut for GrpcStatus {
 
 impl IntoResponse for GrpcStatus {
     fn into_response(self) -> Response {
-        self.0.into_http().into_response()
+        self.0.into_http::<axum::body::Body>().into_response()
     }
 }

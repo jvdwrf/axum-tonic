@@ -1,11 +1,11 @@
-use axum::{http::header::CONTENT_TYPE, response::IntoResponse, Router};
-use futures::{future::BoxFuture, ready};
+use axum::{Router, http::header::CONTENT_TYPE};
+use futures::ready;
 use hyper::{Request, Response};
 use std::{
     convert::Infallible,
     task::{Context, Poll},
 };
-use tower::{make::Shared, Service};
+use tower::{Service, make::Shared};
 
 /// This service splits all incoming requests either to the rest-service, or to
 /// the grpc-service based on the `content-type` header.
@@ -59,10 +59,14 @@ impl RestGrpcService {
     }
 }
 
-impl Service<Request<axum::body::Body>> for RestGrpcService {
+impl<ReqBody> Service<Request<ReqBody>> for RestGrpcService
+where
+    ReqBody: http_body::Body<Data = axum::body::Bytes> + Send + 'static,
+    ReqBody::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
+{
     type Response = Response<axum::body::Body>;
     type Error = Infallible;
-    type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
+    type Future = <Router as Service<Request<ReqBody>>>::Future;
 
     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         // drive readiness for each inner service and record which is ready
@@ -72,22 +76,28 @@ impl Service<Request<axum::body::Body>> for RestGrpcService {
                     return Ok(()).into();
                 }
                 (false, _) => {
-                    ready!(<axum::Router as tower::Service<
-                        Request<axum::body::Body>,
-                    >>::poll_ready(&mut self.rest_router, cx))?;
+                    ready!(
+                        <axum::Router as tower::Service<Request<ReqBody>>>::poll_ready(
+                            &mut self.rest_router,
+                            cx
+                        )
+                    )?;
                     self.rest_ready = true;
                 }
                 (_, false) => {
-                    ready!(<axum::Router as tower::Service<
-                        Request<axum::body::Body>,
-                    >>::poll_ready(&mut self.rest_router, cx))?;
+                    ready!(
+                        <axum::Router as tower::Service<Request<ReqBody>>>::poll_ready(
+                            &mut self.rest_router,
+                            cx
+                        )
+                    )?;
                     self.grpc_ready = true;
                 }
             }
         }
     }
 
-    fn call(&mut self, req: Request<axum::body::Body>) -> Self::Future {
+    fn call(&mut self, req: Request<ReqBody>) -> Self::Future {
         // require users to call `poll_ready` first, if they don't we're allowed to panic
         // as per the `tower::Service` contract
         assert!(
@@ -103,18 +113,10 @@ impl Service<Request<axum::body::Body>> for RestGrpcService {
         // when calling a service it becomes not-ready so we have drive readiness again
         if is_grpc_request(&req) {
             self.grpc_ready = false;
-            let future = self.grpc_router.call(req);
-            Box::pin(async move {
-                let res = future.await?;
-                Ok(res.into_response())
-            })
+            self.grpc_router.call(req)
         } else {
             self.rest_ready = false;
-            let future = self.rest_router.call(req);
-            Box::pin(async move {
-                let res = future.await?;
-                Ok(res.into_response())
-            })
+            self.rest_router.call(req)
         }
     }
 }
