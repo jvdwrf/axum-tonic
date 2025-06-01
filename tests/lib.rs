@@ -30,6 +30,10 @@ async fn cancel_request(_req: Request, _next: Next) -> Result<Response, GrpcStat
 
 #[tokio::test]
 async fn main() {
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let port = listener.local_addr().unwrap().port();
+    let address = Box::leak(Box::new(format!("http://127.0.0.1:{port}")));
+
     tokio::task::spawn(async move {
         let grpc_router1 = Router::new()
             .nest_tonic(Test1Server::new(Test1Service {
@@ -48,16 +52,12 @@ async fn main() {
 
         let service = RestGrpcService::new(rest_router, grpc_router).into_make_service();
 
-        let listener = TcpListener::bind("127.0.0.1:8080").await.unwrap();
         axum::serve(listener, service).await.unwrap();
     });
 
     tokio::time::sleep(Duration::from_millis(100)).await;
 
-    let channel = Channel::from_static("http://127.0.0.1:8080")
-        .connect()
-        .await
-        .unwrap();
+    let channel = Channel::from_static(address).connect().await.unwrap();
 
     let mut client1 = Test1Client::new(channel.clone());
     client1.test1(Test1Request {}).await.unwrap();
@@ -66,10 +66,7 @@ async fn main() {
     client1.test1(Test1Request {}).await.unwrap();
     client1.test1(Test1Request {}).await.unwrap();
 
-    let channel = Channel::from_static("http://127.0.0.1:8080")
-        .connect()
-        .await
-        .unwrap();
+    let channel = Channel::from_static(address).connect().await.unwrap();
 
     client1.test1(Test1Request {}).await.unwrap();
     client1.test1(Test1Request {}).await.unwrap();
