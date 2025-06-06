@@ -15,12 +15,11 @@ use common::{
         Test1Request, Test2Request, test1_client::Test1Client, test1_server::Test1Server,
         test2_client::Test2Client, test2_server::Test2Server,
     },
-    server::{Test1Service, Test2Service},
+    server::{Test1Service, Test1ServiceWithConnectInfo, Test2Service, Test2ServiceWithConnectInfo},
 };
 use tokio::net::TcpListener;
 use tonic::transport::Channel;
 
-use crate::common::server::{Test1ServiceWithConnectInfo, Test2ServiceWithConnectInfo};
 
 async fn do_nothing(req: Request, next: Next) -> Result<Response, GrpcStatus> {
     Ok(next.run(req).await)
