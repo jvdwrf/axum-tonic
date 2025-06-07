@@ -2,7 +2,7 @@
 [package]
 edition = "2024"
 name = "axum_tonic"
-version = "0.4.0"
+version = "0.4.1"
 license = "MIT OR Apache-2.0"
 description = "Use Tonic with Axum"
 homepage = "https://github.com/jvdwrf/axum-tonic"
