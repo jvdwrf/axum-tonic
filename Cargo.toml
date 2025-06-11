@@ -5,7 +5,7 @@ name = "axum_tonic"
 version = "0.4.1"
 license = "MIT OR Apache-2.0"
 description = "Use Tonic with Axum"
-homepage = "https://github.com/jvdwrf/axum-tonic"
+repository = "https://github.com/jvdwrf/axum-tonic"
 keywords = ["axum", "tonic", "interop", "grpc", "web"]
 categories = ["web-programming"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
