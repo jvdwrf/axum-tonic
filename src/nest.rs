@@ -23,7 +23,7 @@ pub trait NestTonic<B>: Sized {
             + NamedService,
         S::Future: Send + 'static + Unpin,
         B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
-        B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>;
+        B::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>;
 }
 
 impl<B> NestTonic<B> for Router {
@@ -41,7 +41,7 @@ impl<B> NestTonic<B> for Router {
             + NamedService,
         S::Future: Send + 'static + Unpin,
         B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
-        B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
+        B::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
     {
         // Nest it at /S::NAME, and wrap the service in an AxumTonicService
         self.route(
@@ -66,7 +66,7 @@ where
     S: Service<Request<B>, Error = Infallible, Response = hyper::Response<TBody>>,
     S::Future: Unpin,
     TBody: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
-    TBody::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
+    TBody::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
 {
     type Response = axum::response::Response;
     type Error = Infallible;
@@ -99,7 +99,7 @@ impl<F, B> Future for AxumTonicServiceFut<F>
 where
     F: Future<Output = Result<hyper::Response<B>, Infallible>> + Unpin,
     B: Send + http_body::Body<Data = axum::body::Bytes> + 'static,
-    B::Error: Into<Box<(dyn std::error::Error + Send + Sync + 'static)>>,
+    B::Error: Into<Box<dyn std::error::Error + Send + Sync + 'static>>,
 {
     type Output = Result<axum::response::Response, Infallible>;
 

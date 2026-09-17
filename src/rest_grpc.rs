@@ -1,18 +1,18 @@
 use axum::{
-    extract::connect_info::{ConnectInfo, Connected}, 
-    http::header::CONTENT_TYPE, 
-    Router
+    Router,
+    extract::connect_info::{ConnectInfo, Connected},
+    http::header::CONTENT_TYPE,
 };
 use futures::ready;
 use hyper::{Request, Response};
 use std::{
-    convert::Infallible,
-    task::{Context, Poll},
     any::Any,
+    convert::Infallible,
     net::SocketAddr,
+    task::{Context, Poll},
 };
 use tonic::transport::server::TcpConnectInfo;
-use tower::{make::Shared, Service};
+use tower::{Service, make::Shared};
 
 /// This service splits all incoming requests either to the rest-service, or to
 /// the grpc-service based on the `content-type` header.
@@ -95,7 +95,7 @@ impl RestGrpcService {
     ///     svc.into_make_service_with_connect_info::<SocketAddr>()
     /// ).await.unwrap();
     /// ```
-    pub fn into_make_service_with_connect_info<C>(self) -> RestGrpcMakeServiceWithConnectInfo<C> 
+    pub fn into_make_service_with_connect_info<C>(self) -> RestGrpcMakeServiceWithConnectInfo<C>
     where
         C: Send + Sync + Clone + 'static,
     {
@@ -105,7 +105,6 @@ impl RestGrpcService {
         }
     }
 }
-
 
 /// A wrapper service that captures connection info and passes it to the inner service.
 #[derive(Clone)]
@@ -198,7 +197,8 @@ where
 
         // Store connect info in request extensions for all requests passing through
         // this service, so Axum handlers in both rest_router and grpc_router can access it.
-        req.extensions_mut().insert(ConnectInfo(self.connect_info.clone()));
+        req.extensions_mut()
+            .insert(ConnectInfo(self.connect_info.clone()));
 
         // tonic via grpc_router should also have a TcpConnectInfo, this will populated
         // `request.remote_addr()` but not `.local_addr()`.

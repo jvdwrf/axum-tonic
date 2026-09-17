@@ -15,11 +15,12 @@ use common::{
         Test1Request, Test2Request, test1_client::Test1Client, test1_server::Test1Server,
         test2_client::Test2Client, test2_server::Test2Server,
     },
-    server::{Test1Service, Test1ServiceWithConnectInfo, Test2Service, Test2ServiceWithConnectInfo},
+    server::{
+        Test1Service, Test1ServiceWithConnectInfo, Test2Service, Test2ServiceWithConnectInfo,
+    },
 };
 use tokio::net::TcpListener;
 use tonic::transport::Channel;
-
 
 async fn do_nothing(req: Request, next: Next) -> Result<Response, GrpcStatus> {
     Ok(next.run(req).await)
@@ -104,7 +105,8 @@ async fn main_connect_info() {
 
         let rest_router = Router::new().merge(Router::new().route("/123", get(|| async move {})));
 
-        let service = RestGrpcService::new(rest_router, grpc_router).into_make_service_with_connect_info::<SocketAddr>();
+        let service = RestGrpcService::new(rest_router, grpc_router)
+            .into_make_service_with_connect_info::<SocketAddr>();
 
         axum::serve(listener, service).await.unwrap();
     });

@@ -2,7 +2,7 @@
 [package]
 edition = "2024"
 name = "axum_tonic"
-version = "0.4.1"
+version = "0.5.0"
 license = "MIT OR Apache-2.0"
 description = "Use Tonic with Axum"
 repository = "https://github.com/jvdwrf/axum-tonic"
@@ -25,7 +25,7 @@ tonic-build = "0.14"
 tokio = { version = "1", features = ["full"] }
 prost = "0.14"
 tonic-prost = "0.14"
-tower-http = { version = "0.6", features = [
+tower-http = { version = "0.7", features = [
     "compression-gzip",
     "cors",
     "compression-br",
